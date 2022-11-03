@@ -92,8 +92,11 @@ static void ptyx_ctrl_close(struct tty_struct *tty, struct file * filp)
 }
 
 
-  
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+static unsigned int ptyx_ctrl_write_room(struct tty_struct *tty)
+#else 
 static int ptyx_ctrl_write_room(struct tty_struct *tty)
+#endif
 {
 	struct ptyx_struct *ptyx_info;
 
@@ -102,7 +105,11 @@ static int ptyx_ctrl_write_room(struct tty_struct *tty)
 
 	ptyx_info = (struct ptyx_struct *) tty->driver_data;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+	if (!tty || tty->flow.stopped || (ptyx_info->flags & SLAVE_CLOSING) )
+#else
 	if (!tty || tty->stopped || (ptyx_info->flags & SLAVE_CLOSING) )
+#endif	
 		return 0;
 
 	return RECEIVE_ROOM(tty);
@@ -111,7 +118,11 @@ static int ptyx_ctrl_write_room(struct tty_struct *tty)
 //	The Control tty will pass all statuses in raw mode to the dameon
 // so in this case we can	return the true count in the buffer.
 //
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+static unsigned int ptyx_ctrl_chars_in_buffer(struct tty_struct *tty)
+#else
 static int ptyx_ctrl_chars_in_buffer(struct tty_struct *tty)
+#endif
 {
     return 0;
 }

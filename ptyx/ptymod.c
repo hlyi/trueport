@@ -286,24 +286,39 @@ static int __init ptyx_init(void)
 		goto init_out;
 	}
 	
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0))
+	ptyx_master_driver = tty_alloc_driver(max_installed_ports,0);
+	if (IS_ERR(ptyx_master_driver))
+#else
 	ptyx_master_driver = alloc_tty_driver(max_installed_ports);
 	if (!ptyx_master_driver)
+#endif
 	{
 		printk("Couldn't allocate ptyx master driver \n");
 		retval = -ENOMEM;
 		goto init_out;
 	}
 	
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0))
+	ptyx_slave_driver = tty_alloc_driver(max_installed_ports,0);
+	if (IS_ERR(ptyx_slave_driver))	
+#else
 	ptyx_slave_driver = alloc_tty_driver(max_installed_ports);
 	if (!ptyx_slave_driver)
+#endif
 	{
 		printk("Couldn't allocate ptyx slave driver \n");
 		retval = -ENOMEM;
 		goto init_out;
 	}
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0))
+	ptyx_control_driver = tty_alloc_driver(max_installed_ports,0);
+	if (IS_ERR(ptyx_control_driver))	
+#else
 	ptyx_control_driver = alloc_tty_driver(max_installed_ports);
 	if (!ptyx_control_driver)
+#endif
 	{
 		printk("Couldn't allocate ptyx ctrl status driver \n");
 		retval = -ENOMEM;
@@ -403,20 +418,32 @@ static int __init ptyx_init(void)
 
 	if ( (retval = tty_register_driver(ptyx_control_driver)) < 0 )
 	{
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0))
+		tty_driver_kref_put(ptyx_control_driver);
+#else
  		put_tty_driver(ptyx_control_driver);
+#endif
 		printk("Couldn't register ptyx control status driver, retval=%d3 \n", retval);
 	}
 
 	if ( (retval = tty_register_driver(ptyx_slave_driver)) < 0 )
 	{
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0))
+		tty_driver_kref_put(ptyx_slave_driver);
+#else
 		put_tty_driver(ptyx_slave_driver);
+#endif
 		printk("Couldn't register ptyx slave driver, retval=%d \n", retval);
 		goto init_out;
 	}
 
 	if ( (retval = tty_register_driver(ptyx_master_driver)) < 0 )
 	{
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0))
+		tty_driver_kref_put(ptyx_slave_driver);
+#else
  		put_tty_driver(ptyx_slave_driver);
+#endif
 		printk("Couldn't register ptyx master driver, retval=%d \n", retval);
 	}
 
@@ -427,27 +454,55 @@ init_out:
 
 static void __exit ptyx_finish(void) 
 {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0))
+	int i;
+#else
 	int e1, i;
+#endif
 	
 	ptyx_print(PTYX_DEBUG_MISC, ("ptyx_finish(): unregistering driver \n"));
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0))
+	tty_unregister_driver(ptyx_master_driver);
+#else
 	if ( (e1 = tty_unregister_driver(ptyx_master_driver)) )
 	{
 		printk("ptyx_finish(): ptyx faied to unregister master TTY driver (%d) \n", e1);
 	}
+#endif
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0))
+	tty_driver_kref_put(ptyx_master_driver);	
+#else
 	put_tty_driver(ptyx_master_driver);
+#endif
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0))
+	tty_unregister_driver(ptyx_slave_driver);
+#else
 	if ( (e1 = tty_unregister_driver(ptyx_slave_driver)) )
 	{
 		printk("ptyx_finish(): ptyx faied to unregister slave TTY driver (%d) \n", e1);
 	}
+#endif
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0))
+	tty_driver_kref_put(ptyx_slave_driver);
+#else
 	put_tty_driver(ptyx_slave_driver);
+#endif
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0))
+	tty_unregister_driver(ptyx_control_driver);
+#else
 	if ( (e1 = tty_unregister_driver(ptyx_control_driver)) )
 	{
 		printk("ptyx_finish(): ptyx faied to unregister control status TTY driver (%d) \n", e1);
 	}
+#endif
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0))
+	tty_driver_kref_put(ptyx_control_driver);
+#else
 	put_tty_driver(ptyx_control_driver);
+#endif
 	
 	if (pty_state_table)
 	{

@@ -225,7 +225,11 @@ static int ptyx_slave_write(struct tty_struct * tty, int from_user,
 	m_tty = ptyx_info->m_tty;
 	PTYX_UNLOCK(&ptyx_info->port_lock, flags);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+	if ( !m_tty || tty->flow.stopped )
+#else
 	if ( !m_tty || tty->stopped )
+#endif	
 		return 0;
 
 	if (from_user) 
@@ -309,7 +313,11 @@ static int ptyx_slave_write(struct tty_struct * tty,
 	m_tty = ptyx_info->m_tty;
 	PTYX_UNLOCK(&ptyx_info->port_lock, flags);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+	if ( !m_tty || tty->flow.stopped )
+#else
 	if ( !m_tty || tty->stopped )
+#endif	
 		return 0;
 	    
         if (!slave_dump_data(ptyx_info))
@@ -339,7 +347,11 @@ static int ptyx_slave_write(struct tty_struct * tty,
 
  
  
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+static unsigned int ptyx_slave_write_room(struct tty_struct *tty)
+#else
 static int ptyx_slave_write_room(struct tty_struct *tty)
+#endif
 {
 	struct ptyx_struct *ptyx_info;
 	struct tty_struct *m_tty;
@@ -355,7 +367,11 @@ static int ptyx_slave_write_room(struct tty_struct *tty)
 	m_tty = ptyx_info->m_tty;
 	PTYX_UNLOCK(&ptyx_info->port_lock, flags);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+	if (!m_tty || tty->flow.stopped)
+#else
 	if (!m_tty || tty->stopped)
+#endif
 		return 0;
 
 	return RECEIVE_ROOM(m_tty);
@@ -367,7 +383,11 @@ static int ptyx_slave_write_room(struct tty_struct *tty)
  *	buffer where they can be read immediately, so in this case we can
  *	return the true count in the buffer.
  */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+static unsigned int ptyx_slave_chars_in_buffer(struct tty_struct *tty)
+#else
 static int ptyx_slave_chars_in_buffer(struct tty_struct *tty)
+#endif
 {
     return 0;
 }
@@ -488,6 +508,10 @@ static void ptyx_slave_start(struct tty_struct *tty)
 //        in the forground.  See tty_io.c
 // 
 //*****************************************************************************
+
+#if LINUX_VERSION_CODE >=  KERNEL_VERSION(5,13,0)
+int tty_check_change(struct tty_struct *tty);
+#endif
 
 #if (LINUX_VERSION_CODE <  KERNEL_VERSION(2,6,39))		// Less than 2.6.39
 static int ptyx_slave_ioctl(struct tty_struct *tty, struct file *file,

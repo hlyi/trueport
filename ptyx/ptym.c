@@ -175,7 +175,11 @@ static int ptyx_master_write(struct tty_struct * tty, int from_user,
 	s_tty = ptyx_info->s_tty;
 	PTYX_UNLOCK(&ptyx_info->port_lock, flags);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+	if (!s_tty || tty->flow.stopped || (ptyx_info->flags & SLAVE_CLOSING) )
+#else
 	if (!s_tty || tty->stopped || (ptyx_info->flags & SLAVE_CLOSING) )
+#endif	
 		return 0;
 
 	if (from_user) 
@@ -245,7 +249,11 @@ static int ptyx_master_write(struct tty_struct * tty,
 	s_tty = ptyx_info->s_tty;
 	PTYX_UNLOCK(&ptyx_info->port_lock, flags);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+	if (!s_tty || tty->flow.stopped || (ptyx_info->flags & SLAVE_CLOSING) )
+#else
 	if (!s_tty || tty->stopped || (ptyx_info->flags & SLAVE_CLOSING) )
+#endif	
 		return 0;
 
     if (count > 0) 
@@ -266,7 +274,11 @@ static int ptyx_master_write(struct tty_struct * tty,
 }
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+static unsigned int ptyx_master_write_room(struct tty_struct *tty)
+#else
 static int ptyx_master_write_room(struct tty_struct *tty)
+#endif
 {
 	struct ptyx_struct *ptyx_info;
 	struct tty_struct *s_tty;
@@ -281,7 +293,11 @@ static int ptyx_master_write_room(struct tty_struct *tty)
 	s_tty = ptyx_info->s_tty;
 	PTYX_UNLOCK(&ptyx_info->port_lock, flags);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+	if (!s_tty || tty->flow.stopped || (ptyx_info->flags & SLAVE_CLOSING) )
+#else
 	if (!s_tty || tty->stopped || (ptyx_info->flags & SLAVE_CLOSING) )
+#endif	
 		return 0;
 
 	return RECEIVE_ROOM(s_tty);
@@ -301,7 +317,11 @@ static int ptyx_master_write_room(struct tty_struct *tty)
  *	read. (The N_TTY ldisc.chars_in_buffer now knows this.)
  *  
  */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+static unsigned int ptyx_master_chars_in_buffer(struct tty_struct *tty)
+#else
 static int ptyx_master_chars_in_buffer(struct tty_struct *tty)
+#endif
 {
     return 0;
 }
